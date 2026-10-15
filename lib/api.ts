@@ -42,12 +42,12 @@ async function fetchApi<T>(
 
   try {
     const res = await fetch(url, {
+      ...options,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         ...options?.headers,
       },
-      ...options,
     });
 
     if (!res.ok) {

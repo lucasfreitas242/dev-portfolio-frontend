@@ -24,6 +24,10 @@ async function proxyRequest(
       ? await req.text()
       : undefined;
 
+  if (body && !headers.has("content-type")) {
+    headers.set("content-type", "application/json");
+  }
+
   try {
     const res = await fetch(url, {
       method: req.method,
