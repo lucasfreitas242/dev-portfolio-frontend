@@ -18,7 +18,6 @@ import {
   Loader2,
   AlertCircle,
   Clock,
-  Sparkles,
 } from "lucide-react";
 
 export default function NewPostPage() {

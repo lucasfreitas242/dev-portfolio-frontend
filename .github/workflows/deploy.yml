@@ -1,0 +1,92 @@
+name: CI/CD Pipeline - Frontend
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ============================================================================
+  # Stage 1: Quality, Linting, Typecheck & Production Build
+  # Runs on both Pull Requests and pushes to main
+  # ============================================================================
+  validate-and-build:
+    name: Lint, Typecheck & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Code Quality & Linting
+        run: npm run lint
+
+      - name: TypeScript Static Contract Verification
+        run: npx tsc --noEmit
+
+      - name: Validate Production Build (Next.js & Turbopack)
+        env:
+          NEXT_PUBLIC_API_URL: https://api.lucasefreitas.dev
+          NEXT_PUBLIC_SITE_URL: https://lucasefreitas.dev
+        run: npm run build
+
+  # ============================================================================
+  # Stage 2: Deploy to Vercel (CD)
+  # Executes only when merged or pushed to main
+  # Supports Vercel Deploy Hook (Recommended) and Vercel CLI Token
+  # ============================================================================
+  deploy-to-vercel:
+    name: Deploy to Vercel Production
+    needs: validate-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Estratégia 1: Deploy Hook via Webhook URL (Idêntico ao Render)
+      - name: Trigger Vercel Deploy Hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -n "$DEPLOY_HOOK_URL" ]; then
+            echo "Triggering Vercel production deployment hook..."
+            curl -s -S -X POST "$DEPLOY_HOOK_URL"
+            echo "Deployment webhook triggered successfully on Vercel."
+          else
+            echo "VERCEL_DEPLOY_HOOK_URL not configured. Checking Vercel CLI tokens..."
+          fi
+
+      # Estratégia 2: Vercel CLI (Fallback caso use VERCEL_TOKEN)
+      - name: Deploy via Vercel CLI
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ] && [ -n "$VERCEL_TOKEN" ]; then
+            echo "Installing Vercel CLI..."
+            npm install --global vercel@latest
+            echo "Pulling Vercel project configuration..."
+            vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+            echo "Building production bundle..."
+            vercel build --prod --token=$VERCEL_TOKEN
+            echo "Deploying prebuilt production bundle to Vercel..."
+            vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+            echo "Vercel CLI deployment finished successfully."
+          elif [ -z "$DEPLOY_HOOK_URL" ] && [ -z "$VERCEL_TOKEN" ]; then
+            echo "NOTE: Neither VERCEL_DEPLOY_HOOK_URL nor VERCEL_TOKEN secrets are set."
+            echo "If you have Vercel GitHub App integration connected, Vercel deploys automatically."
+          fi
