@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Clock, Calendar, ArrowRight, Languages } from "lucide-react";
 import { PostSummary } from "@/types/api";
 import { CategoryBadge } from "./CategoryBadge";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface PostCardProps {
   post: PostSummary;
@@ -9,8 +12,10 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, featured = false }: PostCardProps) {
+  const { t, language } = useLanguage();
+
   const formattedDate = post.publishedAt
-    ? new Intl.DateTimeFormat("pt-BR", {
+    ? new Intl.DateTimeFormat(language, {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -36,7 +41,7 @@ export function PostCard({ post, featured = false }: PostCardProps) {
 
             <span className="inline-flex items-center gap-1 text-zinc-400">
               <Clock className="h-3 w-3 text-zinc-500" />
-              {post.readingTimeMinutes} min
+              {post.readingTimeMinutes} {t.common.minRead}
             </span>
           </div>
         </div>
@@ -67,7 +72,7 @@ export function PostCard({ post, featured = false }: PostCardProps) {
         )}
 
         <span className="inline-flex items-center gap-1 font-medium text-emerald-400 group-hover:translate-x-1 transition-transform">
-          Ler artigo
+          {t.common.readMore}
           <ArrowRight className="h-3.5 w-3.5" />
         </span>
       </div>

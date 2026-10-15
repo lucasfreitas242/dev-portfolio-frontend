@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,18 +19,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     template: "%s | Lucas E. Freitas",
-    default: "Lucas E. Freitas | Software Engineer & Systems Architect",
+    default: "Lucas E. Freitas | Senior Software Engineer & Systems Architect",
   },
   description:
-    "Engenheiro de Software especializado em .NET, Clean Architecture, Microsserviços e Cloud Native.",
+    "Senior Software Engineer specializing in .NET 8, Clean Architecture, Distributed Systems, and Modern Jamstack.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://lucasefreitas.dev"
   ),
   openGraph: {
     type: "website",
-    locale: "pt_BR",
+    locale: "en_US",
     url: "https://lucasefreitas.dev",
-    siteName: "Lucas E. Freitas - Dev Portfolio & Blog",
+    siteName: "Lucas E. Freitas - Software Engineer Portfolio & Blog",
   },
 };
 
@@ -40,14 +41,16 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="pt-BR"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-emerald-500/20 selection:text-emerald-300">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <LanguageProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>
