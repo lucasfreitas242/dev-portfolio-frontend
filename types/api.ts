@@ -66,3 +66,94 @@ export interface ListPostsParams {
   category?: string;
   language?: string;
 }
+
+// ==========================================
+// Admin / CMS Contracts
+// ==========================================
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  expiresAt: string;
+  email: string;
+  name: string;
+}
+
+export interface DraftSummary {
+  id: string;
+  title: string;
+  slug: string;
+  language: string;
+  summary: string;
+  coverImage: string | null;
+  readingTimeMinutes: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  categoryName: string;
+  categorySlug: string;
+}
+
+export interface DraftDetail {
+  id: string;
+  title: string;
+  slug: string;
+  language: string;
+  translationGroupId: string;
+  summary: string;
+  contentMd: string;
+  coverImage: string | null;
+  readingTimeMinutes: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  authorName: string;
+  categoryName: string;
+  categorySlug: string;
+  tags: string[];
+}
+
+export interface CreatePostRequest {
+  title: string;
+  summary: string;
+  contentMd: string;
+  categoryId?: string;
+  categorySlug?: string;
+  slug?: string;
+  language?: string;
+  translationGroupId?: string;
+  coverImage?: string | null;
+  tags?: string[];
+  publishNow?: boolean;
+}
+
+export interface UpdatePostRequest {
+  title: string;
+  summary: string;
+  contentMd: string;
+  categoryId?: string;
+  categorySlug?: string;
+  slug?: string;
+  coverImage?: string | null;
+  tags?: string[];
+}
+
+export interface PostCreatedResponse {
+  id: string;
+  slug: string;
+  language: string;
+  translationGroupId: string;
+  status: string;
+  createdAt: string;
+  publishedAt: string | null;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+  slug?: string;
+  isFeatured?: boolean;
+}

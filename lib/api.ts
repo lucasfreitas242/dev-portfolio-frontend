@@ -1,10 +1,18 @@
 import {
   CategorySummary,
+  CreateCategoryRequest,
+  CreatePostRequest,
+  DraftDetail,
+  DraftSummary,
   ListPostsParams,
+  LoginRequest,
+  LoginResponse,
   PagedResult,
+  PostCreatedResponse,
   PostDetail,
   PostSummary,
   ProblemDetails,
+  UpdatePostRequest,
 } from "@/types/api";
 
 const API_BASE_URL =
@@ -26,7 +34,11 @@ async function fetchApi<T>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
-  const url = `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url =
+    typeof window !== "undefined"
+      ? normalizedPath.replace(/^\/api\/v1/, "/api/proxy")
+      : `${API_BASE_URL}${normalizedPath}`;
 
   try {
     const res = await fetch(url, {
@@ -58,6 +70,10 @@ async function fetchApi<T>(
       throw new ApiError(res.status, errorMessage, problemDetails);
     }
 
+    if (res.status === 204) {
+      return {} as T;
+    }
+
     return (await res.json()) as T;
   } catch (error) {
     if (error instanceof ApiError) {
@@ -69,6 +85,10 @@ async function fetchApi<T>(
     );
   }
 }
+
+// ==========================================
+// Public Endpoints
+// ==========================================
 
 export async function getPublishedPosts(
   params?: ListPostsParams
@@ -131,4 +151,111 @@ export async function getCategoryBySlug(
     }
     throw error;
   }
+}
+
+// ==========================================
+// Admin / CMS Protected Endpoints
+// ==========================================
+
+export async function login(credentials: LoginRequest): Promise<LoginResponse> {
+  return fetchApi<LoginResponse>("/api/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
+}
+
+export async function listDraftPosts(
+  token: string,
+  params?: { page?: number; pageSize?: number }
+): Promise<PagedResult<DraftSummary>> {
+  const query = new URLSearchParams();
+  if (params?.page) query.set("page", params.page.toString());
+  if (params?.pageSize) query.set("pageSize", params.pageSize.toString());
+
+  const qs = query.toString();
+  return fetchApi<PagedResult<DraftSummary>>(
+    `/api/v1/posts/drafts${qs ? `?${qs}` : ""}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+}
+
+export async function getDraftById(
+  token: string,
+  id: string
+): Promise<DraftDetail> {
+  return fetchApi<DraftDetail>(`/api/v1/posts/drafts/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+}
+
+export async function createPost(
+  token: string,
+  data: CreatePostRequest
+): Promise<PostCreatedResponse> {
+  return fetchApi<PostCreatedResponse>("/api/v1/posts", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updatePost(
+  token: string,
+  id: string,
+  data: UpdatePostRequest
+): Promise<DraftDetail> {
+  return fetchApi<DraftDetail>(`/api/v1/posts/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function publishPost(
+  token: string,
+  id: string
+): Promise<{ id: string; status: string; publishedAt: string }> {
+  return fetchApi<{ id: string; status: string; publishedAt: string }>(
+    `/api/v1/posts/${id}/publish`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+}
+
+export async function deletePost(token: string, id: string): Promise<void> {
+  return fetchApi<void>(`/api/v1/posts/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createCategory(
+  token: string,
+  data: CreateCategoryRequest
+): Promise<CategorySummary> {
+  return fetchApi<CategorySummary>("/api/v1/categories", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
 }

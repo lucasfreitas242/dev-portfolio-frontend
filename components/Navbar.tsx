@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Shield } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/icons/SocialIcons";
 
 export function Navbar() {
@@ -65,6 +65,14 @@ export function Navbar() {
           >
             <LinkedinIcon className="h-4 w-4" />
           </a>
+
+          <Link
+            href="/admin"
+            title="Acesso CMS Admin"
+            className="rounded-lg p-2 text-zinc-500 hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors"
+          >
+            <Shield className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </header>
